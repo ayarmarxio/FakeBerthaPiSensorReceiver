@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -30,14 +32,14 @@ namespace FakeBerthaPiSensorReceiver
             int number = 0;
 
             //Creates a UdpClient for reading incoming data.
-            UdpClient udpReceiver = new UdpClient(9000);
+            UdpClient udpReceiver = new UdpClient(7000);
 
             // This IPEndPoint will allow you to read datagrams sent from any ip-source on port 9000
 
 
-            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 9000);
+            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 7000);
 
-            udpReceiver.Connect(RemoteIpEndPoint);
+            //udpReceiver.Connect(RemoteIpEndPoint);
 
             // Blocks until a message returns on this socket from a remote host.
             Console.WriteLine("Receiver is blocked");
@@ -46,7 +48,7 @@ namespace FakeBerthaPiSensorReceiver
             {
                 while (true)
                 {
-                    Byte[] receiveBytes = udpReceiver.Receive(ref RemoteIpEndPoint);
+                    byte[] receiveBytes = udpReceiver.Receive(ref RemoteIpEndPoint);
 
                     string receivedData = Encoding.ASCII.GetString(receiveBytes);
 
@@ -72,25 +74,25 @@ namespace FakeBerthaPiSensorReceiver
                     string text2 = list2[1];
                     string[] list3 = textLines[2].Split(':');
                     string text3 = list3[1];
-                    string[] list4 = textLines[2].Split(':');
+                    string[] list4 = textLines[3].Split(':');
                     string text4 = list4[1];
-                    string[] list5 = textLines[1].Split(':');
+                    string[] list5 = textLines[4].Split(':');
                     string text5 = list5[1];
-                    string[] list6 = textLines[2].Split(':');
+                    string[] list6 = textLines[5].Split(':');
                     string text6 = list6[1];
-                    string[] list7 = textLines[2].Split(':');
+                    string[] list7 = textLines[6].Split(':');
                     string text7 = list7[1];
-                    string[] list8 = textLines[1].Split(':');
+                    string[] list8 = textLines[7].Split(':');
                     string text8 = list8[1];
-                    string[] list9 = textLines[2].Split(':');
+                    string[] list9 = textLines[8].Split(':');
                     string text9 = list9[1];
-                    string[] list10 = textLines[2].Split(':');
+                    string[] list10 = textLines[9].Split(':');
                     string text10 = list10[1];
-                    string[] list11 = textLines[1].Split(':');
+                    string[] list11 = textLines[10].Split(':');
                     string text11 = list11[1];
-                    string[] list12 = textLines[2].Split(':');
+                    string[] list12 = textLines[11].Split(':');
                     string text12 = list12[1];
-                    string[] list13 = textLines[0].Split(':');
+                    string[] list13 = textLines[12].Split(':');
                     string text13 = list13[1];
 
 
@@ -123,7 +125,13 @@ namespace FakeBerthaPiSensorReceiver
                     Console.WriteLine("CarbonMonoxide: " + _carbonMonoxide);
                     Console.WriteLine("Ozone: " + _ozone);
                     Console.WriteLine("UserId: " + _userId);
-                    
+
+                    Record record = new Record(_long, _lat, _bpSystolic, _bpDiastolic, _bodyTemperature, _heartBeatPerSecond, _dust, _sulphur, _nitrogen, _fluor, _carbonMonoxide, _ozone, _userId);
+
+                    PostRecordAsync(record);        
+
+                   
+
                     //Console.ReadLine(); //for reading the data slowly
                     Thread.Sleep(1000);
 
@@ -136,5 +144,21 @@ namespace FakeBerthaPiSensorReceiver
             }
 
         }
+
+        static async Task PostRecordAsync(Record record)
+        {
+            HttpClient client = new HttpClient();
+
+            client.BaseAddress = new Uri("https://berthapibeta20181025031131.azurewebsites.net");
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+
+            HttpResponseMessage response = await client.PostAsJsonAsync("api/records", record);
+            response.EnsureSuccessStatusCode();
+
+            Console.Write("Este es el status actual: " + response);         
+        }
+
     }
 }
