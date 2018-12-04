@@ -32,12 +32,12 @@ namespace FakeBerthaPiSensorReceiver
             int number = 0;
 
             //Creates a UdpClient for reading incoming data.
-            UdpClient udpReceiver = new UdpClient(7000);
+            UdpClient udpReceiver = new UdpClient(7500);
 
             // This IPEndPoint will allow you to read datagrams sent from any ip-source on port 9000
 
 
-            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 7000);
+            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 7500);
 
             //udpReceiver.Connect(RemoteIpEndPoint);
 
@@ -52,7 +52,7 @@ namespace FakeBerthaPiSensorReceiver
 
                     string receivedData = Encoding.ASCII.GetString(receiveBytes);
 
-                    if (receivedData.Equals("STOP.Secret")) throw new Exception("Receiver stopped");
+                    //if (receivedData.Equals("STOP.Secret")) throw new Exception("Receiver stopped");
 
                     Console.WriteLine("Sender: " + receivedData.ToString());
                     //Console.WriteLine("This message was sent from " +
@@ -63,6 +63,8 @@ namespace FakeBerthaPiSensorReceiver
 
                     // string[] textLines = receivedData.Split(' '); is possible but a little more difficult 
                     //best to split by '\n' or \r\ and then split by ' ' or  ':'
+
+
                     string[] textLines = receivedData.Split('\n');
 
                     for (int index = 0; index < textLines.Length; index++)
@@ -128,7 +130,7 @@ namespace FakeBerthaPiSensorReceiver
 
                     Record record = new Record(_long, _lat, _bpSystolic, _bpDiastolic, _bodyTemperature, _heartBeatPerSecond, _dust, _sulphur, _nitrogen, _fluor, _carbonMonoxide, _ozone, _userId);
 
-                    PostRecordAsync(record);        
+                   PostRecordAsync(record);        
 
                    
 
@@ -151,7 +153,8 @@ namespace FakeBerthaPiSensorReceiver
 
             client.BaseAddress = new Uri("https://berthapibeta20181025031131.azurewebsites.net");
             client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
+            client.Default
+                RequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
 
             HttpResponseMessage response = await client.PostAsJsonAsync("api/records", record);
